@@ -27,6 +27,8 @@ static char* ngx_http_radius_set_radius_server( ngx_conf_t *cf, ngx_command_t *c
 static char* ngx_http_radius_set_radius_timeout( ngx_conf_t *cf, ngx_command_t *cmd, void *conf );
 static char* ngx_http_radius_set_radius_attempts( ngx_conf_t *cf, ngx_command_t *cmd, void *conf );
 static ngx_int_t ngx_http_auth_radius_init(ngx_conf_t *cf);
+static ngx_int_t ngx_http_auth_radius_init_servers(ngx_cycle_t *cycle);
+static void ngx_http_auth_radius_destroy_servers(ngx_cycle_t *cycle);
 static void * ngx_http_auth_radius_create_loc_conf(ngx_conf_t *cf);
 static char * ngx_http_auth_radius_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child);
 static void * ngx_http_auth_radius_create_main_conf(ngx_conf_t *cf);
@@ -91,10 +93,19 @@ ngx_module_t ngx_http_auth_radius_module = {
     NGX_HTTP_MODULE,                        /* module type */
     NULL,                                   /* init master */
     NULL,                                   /* init module */
+
+#if (NGX_THREADS)
     NULL,                                   /* init process */
+    ngx_http_auth_radius_init_servers,      /* init thread */
+    ngx_http_auth_radius_destroy_servers,   /* exit thread */
+    NULL,                                   /* exit process */
+#else /* NGX_THREADS */
+    ngx_http_auth_radius_init_servers,      /* init process */
     NULL,                                   /* init thread */
     NULL,                                   /* exit thread */
-    NULL,                                   /* exit process */
+    ngx_http_auth_radius_destroy_servers,   /* exit process */
+#endif /* NGX_THREADS */
+
     NULL,                                   /* exit master */
     NGX_MODULE_V1_PADDING
 };
@@ -462,6 +473,18 @@ ngx_http_auth_radius_init( ngx_conf_t *cf )
     *h = ngx_http_auth_radius_handler; 
 
     return NGX_OK;
+}
+
+static ngx_int_t
+ngx_http_auth_radius_init_servers( ngx_cycle_t *cycle) {
+    radius_init_servers();
+
+    return NGX_OK;
+}
+
+void
+ngx_http_auth_radius_destroy_servers( ngx_cycle_t *cycle) {
+    radius_destroy_servers();
 }
 
 static char *

@@ -97,9 +97,6 @@ radius_add_server( struct sockaddr* sockaddr, socklen_t socklen, radius_str_t* s
     if ( radius_servers == NULL ) {
         radius_servers = s_array_init( NULL, 20, sizeof( radius_server_t ) );
     }
-    int s = socket( AF_INET, SOCK_DGRAM, 0 );
-    if ( s == -1 )
-        return NULL;
 
     radius_server_t* rs;
     rs = s_array_add( radius_servers, NULL );
@@ -108,7 +105,7 @@ radius_add_server( struct sockaddr* sockaddr, socklen_t socklen, radius_str_t* s
 
     rs->magic = RADIUS_SERVER_MAGIC_HDR;
     rs->id = radius_servers->size - 1;
-    rs->s = s;
+    rs->s = -1;
     rs->sockaddr = sockaddr;
     rs->socklen = socklen;
     rs->secret = *secret;
@@ -127,6 +124,29 @@ radius_add_server( struct sockaddr* sockaddr, socklen_t socklen, radius_str_t* s
     rs->req_last_list = qn; 
 
     return rs;
+}
+
+void radius_init_servers() {
+    uint32_t i;
+    radius_server_t *rs;
+
+    for (i = 0; i < radius_servers->size; i++) {
+        rs = (radius_server_t *) s_array_get( radius_servers, i);
+        rs->s = socket( AF_INET, SOCK_DGRAM, 0);
+    }
+}
+
+void radius_destroy_servers() {
+    uint32_t i;
+    radius_server_t *rs;
+
+    for (i = 0; i < radius_servers->size; i++) {
+        rs = (radius_server_t *) s_array_get( radius_servers, i);
+        if (rs->s >= 0) {
+            close(rs->s);
+            rs->s = -1;
+        }
+    }
 }
 
 radius_req_queue_node_t*

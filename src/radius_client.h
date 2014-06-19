@@ -46,6 +46,10 @@ get_server_by_req( radius_req_queue_node_t* n );
 radius_server_t*
 radius_add_server( struct sockaddr* sockaddr, socklen_t socklen, radius_str_t* secret, radius_str_t* nas_identifier );
 
+void radius_init_servers(void);
+
+void radius_destroy_servers(void);
+
 radius_req_queue_node_t*
 radius_recv_request( radius_server_t* rs );
 
