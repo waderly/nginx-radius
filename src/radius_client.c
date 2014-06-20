@@ -130,6 +130,9 @@ void radius_init_servers() {
     uint32_t i;
     radius_server_t *rs;
 
+    if (radius_servers == NULL)
+        return;
+
     for (i = 0; i < radius_servers->size; i++) {
         rs = (radius_server_t *) s_array_get( radius_servers, i);
         rs->s = socket( AF_INET, SOCK_DGRAM, 0);
@@ -139,6 +142,9 @@ void radius_init_servers() {
 void radius_destroy_servers() {
     uint32_t i;
     radius_server_t *rs;
+
+    if (radius_servers == NULL)
+        return;
 
     for (i = 0; i < radius_servers->size; i++) {
         rs = (radius_server_t *) s_array_get( radius_servers, i);
